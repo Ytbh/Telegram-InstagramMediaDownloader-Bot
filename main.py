@@ -60,51 +60,40 @@ def send_post(update, context):
         visit = requests.get(url).json()
         is_video = visit['graphql']['shortcode_media']['is_video']
 
-        if is_video is True:
-            try:
-                video_url = visit['graphql']['shortcode_media']['video_url']
-                update.message.reply_chat_action('upload_video')
-                update.message.reply_video(video_url)
-            except:
-                pass
-        elif is_video is False:
-            try:
-                post_url = visit['graphql']['shortcode_media']['display_url']
-                update.message.reply_chat_action('upload_photo')
-                update.message.reply_photo(post_url)
-            except:
-                pass
-        else:
-            pass
+        try:
+            posts = visit["graphql"]["shortcode_media"]["edge_sidecar_to_children"][
+                "edges"
+            ]
 
-        for i in range(1, 20):
-            try:
-                is_video = visit['graphql']['shortcode_media'][
-                    'edge_sidecar_to_children'
-                ]['edges'][i]['node']['is_video']
+            for post in posts:
+                is_video = post["node"]["is_video"]
 
                 if is_video is True:
-                    try:
-                        video_url = visit['graphql']['shortcode_media'][
-                            'edge_sidecar_to_children'
-                        ]['edges'][i]['node']['video_url']
-                        update.message.reply_chat_action('upload_video')
-                        update.message.reply_video(video_url)
-                    except:
-                        pass
+                    video_url = post["node"]["video_url"]
+                    update.message.reply_chat_action("upload_video")
+                    update.message.reply_video(video_url)
+
                 elif is_video is False:
-                    try:
-                        post_url = visit['graphql']['shortcode_media'][
-                            'edge_sidecar_to_children'
-                        ]['edges'][i]['node']['display_url']
-                        update.message.reply_chat_action('upload_photo')
-                        update.message.reply_photo(post_url)
-                    except:
-                        pass
+                    post_url = post["node"]["display_url"]
+                    update.message.reply_chat_action("upload_photo")
+                    update.message.reply_photo(post_url)
+
                 else:
                     pass
-            except:
-                break
+
+        except:
+            if is_video is True:
+                video_url = visit["graphql"]["shortcode_media"]["video_url"]
+                update.message.reply_chat_action("upload_video")
+                update.message.reply_video(video_url)
+
+            elif is_video is False:
+                post_url = visit["graphql"]["shortcode_media"]["display_url"]
+                update.message.reply_chat_action("upload_photo")
+                update.message.reply_photo(post_url)
+
+            else:
+                pass
             
     except:
         update.message.reply_text('Send Me Only Public Instagram Posts')
